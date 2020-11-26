@@ -9,6 +9,7 @@ license = "GPLv3"
 python = "^3.6"
 requests = "^2.25.0"
 pygame = "^2.0.0"
+pydantic = "^1.7.2"
 
 [tool.poetry.dev-dependencies]
 
