@@ -2,6 +2,7 @@
     "java.configuration.updateBuildConfiguration": "interactive",
     "python.pythonPath": "/usr/bin/python3",
     "cSpell.words": [
-        "Dynmap"
+        "Dynmap",
+        "pygame"
     ]
 }
