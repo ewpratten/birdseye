@@ -1,4 +1,4 @@
-# Bird's-Eye [![PyPI version](https://img.shields.io/pypi/v/birdseye_mc.svg)](https://pypi.python.org/pypi/birdseye_mc/)
+# Bird's-Eye [![PyPI version](https://img.shields.io/pypi/v/birdseye_mc.svg)](https://pypi.python.org/pypi/birdseye_mc/) ![Poetry Build Suite](https://github.com/Ewpratten/birdseye/workflows/Poetry%20Build%20Suite/badge.svg)
 
 `birdseye_mc` is a GUI application for providing a multi-user bird's-eye view of players on Minecraft servers that have the [Dynmap](https://github.com/webbukkit/dynmap) plugin installed.
 
