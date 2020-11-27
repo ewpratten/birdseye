@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "birdseye"
+name = "birdseye-mc"
 version = "0.1.0"
 description = "A tool for watching players on multiplayer Minecraft servers"
 authors = ["Evan Pratten <ewpratten@gmail.com>"]
@@ -19,3 +19,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.extras]
 pytest = ["pytest"]
+
+[tool.poetry.scripts]
+birdseye = 'birdseye_mc.__main__:main'
