@@ -205,7 +205,7 @@ class Window(object):
         player_coords = self.font.render(
             f"({player.x}, {player.y})", 1, (255, 255, 255))
         player_nameplate = pygame.Surface(
-            (player_name.get_rect().width, player_name.get_rect().height + player_coords.get_rect().height + 5), pygame.SRCALPHA)
+            (max(player_name.get_rect().width, player_coords.get_rect().width), player_name.get_rect().height + player_coords.get_rect().height + 5), pygame.SRCALPHA)
         player_nameplate.fill((50, 50, 50, 128))
         player_nameplate.blit(player_name, (0, 0))
         player_nameplate.blit(
