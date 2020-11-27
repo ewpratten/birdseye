@@ -2,6 +2,7 @@ import requests
 from pygame import Surface
 import pygame.image
 from io import BytesIO
+from typing import List
 
 from ..exceptions.invalid_endpoint_exception import InvalidEndpointException
 
