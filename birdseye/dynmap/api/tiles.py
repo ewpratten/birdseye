@@ -3,10 +3,17 @@ from pygame import Surface
 import pygame.image
 import pygame.font
 from io import BytesIO
-from typing import List
+from typing import List, Dict
 import math
+import time
 
 from ..exceptions.invalid_endpoint_exception import InvalidEndpointException
+
+class _CachedSurface(object):
+    surface: Surface
+    clean_time: float
+
+tile_cache: Dict[str, _CachedSurface] = {}
 
 
 def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int, debug=False) -> Surface:
@@ -25,9 +32,22 @@ def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int, debug=False) -> 
         Surface: Chunk surface
     """
 
+    global tile_cache
+
     # Convert coords to chunk number
     chunk_x = round(x/32)
-    chunk_y = round((y*-1)/32)
+    chunk_y = round((y * -1) / 32)
+    
+    # Search for (and clean) cache
+    for key in list(tile_cache.keys()):
+
+        if key == f"{chunk_x}_{chunk_y}" and key in list(tile_cache.keys()):
+            if debug:
+                print(f"using cached tile: {chunk_x}_{chunk_y}")
+            return tile_cache[f"{chunk_x}_{chunk_y}"].surface
+
+        if key in list(tile_cache.keys()) and tile_cache[key].clean_time < time.time():
+            del tile_cache[key]
 
     # Make remote request
     response = requests.get(
@@ -48,7 +68,14 @@ def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int, debug=False) -> 
     if debug:
         font = pygame.font.Font(None, 25)
         text = font.render(f"({chunk_x}, {chunk_y})", 1, (255, 0, 0))
-        loaded_texture.blit(text, (64,64))
+        loaded_texture.blit(text, (64, 64))
+        
+    # Cache the image
+    tile_cache[f"{chunk_x}_{chunk_y}"] = _CachedSurface()
+    tile_cache[f"{chunk_x}_{chunk_y}"].surface = loaded_texture
+    tile_cache[f"{chunk_x}_{chunk_y}"].clean_time = time.time() + 20.0
+    if debug:
+        print(f"Cached tile: {chunk_x}_{chunk_y}")
 
     return loaded_texture
 
