@@ -32,4 +32,4 @@ def fetchPlayerFace(dynmap_url: str, player_name: str) -> Surface:
     # Load to an image
     img = BytesIO(response.content)
 
-    return pygame.image.load(img, namehint=player_name)
+    return pygame.image.load(img)

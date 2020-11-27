@@ -21,7 +21,7 @@ def main() -> int:
         return 1
 
     # Set up window
-    window = ui.Window(f"{args.dynmap_url} {config.title}", args.dynmap_url)
+    window = ui.Window(f"{args.dynmap_url} {config.title}", args.dynmap_url, debug=args.test)
     window.loadServerConfig(config)
 
     # Run main loop
@@ -41,13 +41,14 @@ def main() -> int:
             players = update.players
 
             if args.test:
-                players.append(dynmap.models.DynmapPlayerModel({
+                players.append(dynmap.models.DynmapPlayerModel(**{
                     "world": config.defaultworld,
                     "name":"TestAccount",
                     "account": "TestAccount",
                     "x": 0,
                     "y": 0,
                     "z": 0,
+                    "test": True
                 }))
 
             window.updatePlayerList(players)

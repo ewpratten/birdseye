@@ -5,6 +5,13 @@ import math
 
 from ..dynmap.models import DynmapPlayerModel, DynmapConfigurationModel
 from ..dynmap.api import fetchPlayerFace, fetchWorldTile
+from ..dynmap.exceptions import InvalidEndpointException
+
+
+class _WorldTile(object):
+    x: int
+    y: int
+    image: pygame.Surface
 
 
 class Window(object):
@@ -12,6 +19,7 @@ class Window(object):
     # Window meta
     name: str
     endpoint: str
+    debug: bool
 
     # Rendering objects
     screen: pygame.Surface
@@ -24,9 +32,10 @@ class Window(object):
     # Ingame players
     online_players: List[DynmapPlayerModel] = []
 
-    def __init__(self, name: str, endpoint: str, size: Optional[Tuple[int, int]] = (800, 600), font: Optional[pygame.font.Font] = None):
+    def __init__(self, name: str, endpoint: str, size: Optional[Tuple[int, int]] = (800, 600), font: Optional[pygame.font.Font] = None, debug: Optional[bool] = False):
         self.name = name
         self.endpoint = endpoint
+        self.debug = debug
 
         # Init the window
         pygame.init()
@@ -86,7 +95,7 @@ class Window(object):
         if not self.isConnectedToServer():
             return 0
         else:
-            return (self.config.updaterate * 1000) - (time.time() - self.last_render_time)
+            return ((self.config.updaterate / 2) / 1000) - (time.time() - self.last_render_time)
 
     def updatePlayerList(self, players: List[DynmapPlayerModel]):
         self.online_players = players
@@ -105,14 +114,78 @@ class Window(object):
         base_surf = base_surf.convert()
 
         # Fetch the player's head
-        player_face = fetchPlayerFace(self.endpoint, player.name)
+        player_face: pygame.Surface = None
+        if not player.test:
+            try:
+                player_face = fetchPlayerFace(self.endpoint, player.name)
+            except InvalidEndpointException as e:
+                pass
 
         # Create the player name
         player_name = self.font.render(player.name, 1, (255, 255, 255))
-        
-        # Determine the number of chunks needed for the size
-        chunks_needed = (math.ceil(size[0] / 128), math.ceil(size[1] / 128))
+        player_nameplate = pygame.Surface((player_name.get_rect().width, player_name.get_rect().height), pygame.SRCALPHA)
+        player_nameplate.fill((50,50,50,128))
+        player_nameplate.blit(player_name, (0,0))
 
+        # Determine the number of chunks needed for the size
+        chunks_needed = (
+            math.ceil(size[0] / 128) + 1, math.ceil(size[1] / 128) + 1)
+
+        # List of surfaces
+        world_tiles: List[_WorldTile] = []
+
+        # Fetch all tiles
+        for x in range(chunks_needed[0]):
+            x = x - chunks_needed[0]/2
+            for y in range(chunks_needed[1]):
+                y = y - chunks_needed[1]/2
+
+                # Convert to a world coordinate
+                # NOTE: My program uses an X/Y plane for coordinates, while Minecaft is X/Z, so this also converts coordinates
+                # On top of this, Minecraft is built on a 16x256x16 chunk system, but dynmap uses a 32x256x32 system
+                x_coord = (x * 32) + player.x
+                y_coord = (y * 32) + player.z
+
+                # Get the tile
+                tile = fetchWorldTile(
+                    self.endpoint, player.world, x_coord, y_coord, debug=self.debug)
+
+                # Build tile
+                w_tile = _WorldTile()
+                w_tile.image = tile
+                w_tile.x = x
+                w_tile.y = y
+                world_tiles.append(w_tile)
+
+        # Get the base surface bounds
+        base_bounds = base_surf.get_rect()
+
+        # Render every tile onto the surface
+        for tile in world_tiles:
+
+            # Get the tile bounds
+            tile_bounds = tile.image.get_rect()
+
+            # Determine the tile position in pixels
+            tile_bounds.centerx = (
+                (tile.x * tile_bounds.width) + base_bounds.centerx)
+            tile_bounds.centery = (
+                (tile.y * tile_bounds.height) + base_bounds.centery)
+
+            # Overlay
+            base_surf.blit(tile.image, tile_bounds)
+
+        # Render the player head
+        if player_face:
+            base_surf.blit(player_face, (10, 10))
+
+        # Render the player name
+        base_surf.blit(player_nameplate, (35, 10))
+
+        # Add a border
+        pygame.draw.rect(base_surf, (128, 0, 0), base_bounds, width=5)
+
+        return base_surf
 
     def doRender(self):
 
@@ -126,3 +199,18 @@ class Window(object):
 
         # Determine the number of screen segments to use
         screen_seg_count = len(self.online_players)
+
+        # Create a background
+        bg = self._generateBackgroundTexture()
+        self.screen.blit(bg, (0, 0))
+
+        # TODO: Test only
+        i = 0
+        for player in self.online_players:
+            if not player.isInHiddenWorld():
+                self.screen.blit(self._getPlayerSurface(
+                    player, (256 * 2, 256 * 2)), (256 * 2 * i, 0))
+                i += 1
+
+        # Display screen contents
+        pygame.display.flip()

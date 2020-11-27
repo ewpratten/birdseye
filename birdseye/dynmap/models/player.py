@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class DynmapPlayerModel(BaseModel):
     world: str
@@ -7,6 +8,7 @@ class DynmapPlayerModel(BaseModel):
     x: int
     y: int
     z: int
+    test: Optional[bool] = False
 
     def isInHiddenWorld(self) -> bool:
         return self.world == "-some-other-bogus-world-"

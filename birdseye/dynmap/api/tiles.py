@@ -1,13 +1,15 @@
 import requests
 from pygame import Surface
 import pygame.image
+import pygame.font
 from io import BytesIO
 from typing import List
+import math
 
 from ..exceptions.invalid_endpoint_exception import InvalidEndpointException
 
 
-def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int) -> Surface:
+def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int, debug=False) -> Surface:
     """Fetches a world chunk
 
     Args:
@@ -24,12 +26,13 @@ def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int) -> Surface:
     """
 
     # Convert coords to chunk number
-    chunk_x = x/16
-    chunk_y = y/16
+    chunk_x = round(x/32)
+    chunk_y = round((y*-1)/32)
 
     # Make remote request
     response = requests.get(
         f"{dynmap_url}/tiles/world/flat/-1_0/{chunk_x}_{chunk_y}.jpg")
+    # print(f"{dynmap_url}/tiles/world/flat/-1_0/{chunk_x}_{chunk_y}.jpg")
 
     # Handle response error
     if int(response.status_code / 100) != 2:
@@ -39,8 +42,15 @@ def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int) -> Surface:
     # Load to an image
     img = BytesIO(response.content)
 
-    return pygame.image.load(img, namehint=f"({x}, {y})")
+    loaded_texture = pygame.image.load(img)
 
+    # Handle debug rendering
+    if debug:
+        font = pygame.font.Font(None, 25)
+        text = font.render(f"({chunk_x}, {chunk_y})", 1, (255, 0, 0))
+        loaded_texture.blit(text, (64,64))
+
+    return loaded_texture
 
 def fetch3X3WorldTiles(dynmap_url: str, world: str, x: int, y: int) -> List[List[Surface]]:
     """Get a 3x3 area of world tiles around a coordinate
