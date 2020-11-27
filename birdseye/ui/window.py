@@ -124,9 +124,11 @@ class Window(object):
         screen_size = self._getScreenSize()
         aspect_ratio = screen_size[0] / screen_size[1]
 
+        player_count = len([player for player in self.online_players if not player.isInHiddenWorld()])
+
         # Determine the number of cols and rows
-        row_count = math.ceil(len(self.online_players) / aspect_ratio)
-        col_count = math.ceil(len(self.online_players) / row_count)
+        row_count = math.ceil(player_count / aspect_ratio)
+        col_count = math.ceil(player_count / row_count)
 
         # Determine box sizing
         box_width = screen_size[0] / col_count

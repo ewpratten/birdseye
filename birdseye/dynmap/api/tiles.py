@@ -46,7 +46,7 @@ def fetchWorldTile(dynmap_url: str, world: str, x: int, y: int, debug=False) -> 
                 print(f"using cached tile: {chunk_x}_{chunk_y}")
             return tile_cache[f"{chunk_x}_{chunk_y}"].surface
 
-        if key in list(tile_cache.keys()) and tile_cache[key].clean_time < time.time():
+        if tile_cache[key].clean_time < time.time():
             del tile_cache[key]
 
     # Make remote request
