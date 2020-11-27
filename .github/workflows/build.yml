@@ -1,4 +1,4 @@
-name: Poetry Suite
+name: Poetry Build Suite
 on: [pull_request, push]
 
 jobs:
